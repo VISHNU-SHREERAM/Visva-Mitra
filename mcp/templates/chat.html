@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LangChain Chat Agent</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            background-color: #f4f4f9;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .chat-wrapper {
+            width: 60vw;
+            max-width: 480px;
+            min-width: 320px;
+            height: 80vh;
+            background: #fff;
+            border-radius: 18px;
+            box-shadow: 0 4px 24px rgba(60,60,120,0.10), 0 1.5px 6px rgba(60,60,120,0.08);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .header {
+            background-color: #4a4a8a;
+            color: white;
+            padding: 16px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.08);
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 1.3em;
+        }
+        .model-selector label {
+            margin-right: 5px;
+            font-size: 0.9em;
+        }
+        .model-selector select {
+            padding: 5px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+            background-color: #fff;
+        }
+        .chat-container {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 24px 16px 16px 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            background: #f7f8fa;
+        }
+        .message {
+            padding: 10px 15px;
+            border-radius: 18px;
+            max-width: 75%;
+            word-wrap: break-word;
+            white-space: pre-wrap;
+            line-height: 1.4;
+        }
+        .message.user {
+            background-color: #4a4a8a;
+            color: white;
+            align-self: flex-end;
+            border-bottom-right-radius: 4px;
+        }
+        .message.bot {
+            background-color: #e9e9eb;
+            color: #333;
+            align-self: flex-start;
+            border-bottom-left-radius: 4px;
+        }
+        .message.error {
+            background-color: #ffebee;
+            color: #c62828;
+            align-self: flex-start;
+            border: 1px solid #f44336;
+            border-bottom-left-radius: 4px;
+        }
+        .message.typing {
+            color: #888;
+            font-style: italic;
+            align-self: flex-start;
+            background: transparent;
+            box-shadow: none;
+            border: none;
+            padding: 0;
+        }
+        .input-area {
+            display: flex;
+            padding: 16px;
+            border-top: 1px solid #eee;
+            background-color: #fff;
+            box-shadow: 0 -2px 5px rgba(0,0,0,0.03);
+        }
+        .input-area input[type="text"] {
+            flex-grow: 1;
+            padding: 12px 18px;
+            border: 1px solid #ccc;
+            border-radius: 20px;
+            margin-right: 10px;
+            font-size: 1em;
+        }
+        .input-area button {
+            padding: 10px 20px;
+            background-color: #4a4a8a;
+            color: white;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background-color 0.2s ease;
+        }
+        .input-area button:hover {
+            background-color: #35356a;
+        }
+        .input-area button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        @media (max-width: 700px) {
+            .chat-wrapper {
+                width: 98vw;
+                min-width: unset;
+                max-width: unset;
+                height: 100vh;
+                border-radius: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-wrapper">
+        <div class="header">
+            <h1>Chat Agent</h1>
+            <div class="model-selector">
+                <label for="model">Model:</label>
+                <select id="model">
+                    {% for model_option in models %}
+                        <option value="{{ model_option }}" {% if model_option == default_model %}selected{% endif %}>
+                            {{ model_option }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+        <div class="chat-container" id="chat-container">
+            <div class="message bot">Hello! Ask me anything.</div>
+        </div>
+        <div class="input-area">
+            <input type="text" id="user-input" placeholder="Type your message...">
+            <button id="send-button">Send</button>
+        </div>
+    </div>
+    <script>
+        const chatContainer = document.getElementById('chat-container');
+        const userInput = document.getElementById('user-input');
+        const sendButton = document.getElementById('send-button');
+        const modelSelector = document.getElementById('model');
+
+        function addMessage(text, sender) {
+            const messageDiv = document.createElement('div');
+            messageDiv.classList.add('message', sender); // sender is 'user', 'bot', 'error', or 'typing'
+            messageDiv.textContent = text;
+            chatContainer.appendChild(messageDiv);
+            // Scroll to the bottom
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+            return messageDiv; // Return the element if needed (e.g., for removing typing indicator)
+        }
+
+        async function sendMessage() {
+            const prompt = userInput.value.trim();
+            const selectedModel = modelSelector.value;
+
+            if (!prompt) return; // Don't send empty messages
+
+            addMessage(prompt, 'user');
+            userInput.value = ''; // Clear input field
+            sendButton.disabled = true; // Disable button while processing
+
+            const typingIndicator = addMessage('Bot is thinking...', 'typing');
+
+            try {
+                const response = await fetch('/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ prompt: prompt, model: selectedModel }),
+                });
+
+                chatContainer.removeChild(typingIndicator); // Remove typing indicator
+
+                if (!response.ok) {
+                     // Try to parse error from backend JSON response
+                     let errorMsg = `HTTP error ${response.status}`;
+                     try {
+                         const errorData = await response.json();
+                         if (errorData && errorData.error) {
+                             errorMsg = `Error: ${errorData.error}`;
+                         }
+                     } catch (parseError) {
+                         console.error("Could not parse error response:", parseError);
+                         // Fallback to status text if JSON parsing fails
+                         errorMsg = `HTTP error ${response.status}: ${response.statusText}`;
+                     }
+                    addMessage(errorMsg, 'error');
+                } else {
+                    const data = await response.json();
+                    if (data.error) {
+                         addMessage(`Error: ${data.error}`, 'error');
+                    } else if (data.response) {
+                        addMessage(data.response, 'bot');
+                    } else {
+                         addMessage("Received an empty response from the bot.", 'error');
+                    }
+                }
+
+            } catch (error) {
+                chatContainer.removeChild(typingIndicator); // Ensure typing indicator is removed on network error
+                console.error('Fetch Error:', error);
+                addMessage(`Network or fetch error: ${error.message}`, 'error');
+            } finally {
+                 sendButton.disabled = false; // Re-enable button
+                 userInput.focus(); // Keep focus on input
+            }
+        }
+
+        sendButton.addEventListener('click', sendMessage);
+
+        userInput.addEventListener('keypress', (event) => {
+            // Send message on Enter key press
+            if (event.key === 'Enter') {
+                event.preventDefault(); // Prevent default form submission/newline
+                sendMessage();
+            }
+        });
+
+         // Initial focus on the input field
+        userInput.focus();
+
+    </script>
+</body>
+</html>
