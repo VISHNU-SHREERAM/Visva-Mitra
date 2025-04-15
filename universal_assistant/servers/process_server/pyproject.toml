@@ -1,0 +1,12 @@
+[project]
+name = "mcp-server"
+version = "0.1.0"
+description = "Process server using psutil for system information"
+readme = "README.md"
+requires-python = ">=3.12.5"
+dependencies = [
+    "dotenv>=0.9.9",
+    "langchain-mcp-adapters>=0.0.8",
+    "mcp[cli]>=1.6.0",
+    "psutil>=5.9.0",
+]
