@@ -30,8 +30,6 @@ async def main():
         agent = create_react_agent(model, client.get_tools())
         # Try out the tools via natural language
         msg1 = {"messages": "Reverse the string 'hello world'"}
-        msg2 = {"messages": "What is the product of 3 and 17?"}
-        msg3 = {"messages": "What is the weather in Palakkad?"}
         res1 = await agent.ainvoke(msg1)
         # print("Reversed string result:", res1)
         for m in res1["messages"]:

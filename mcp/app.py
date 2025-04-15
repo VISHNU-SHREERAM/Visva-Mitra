@@ -14,6 +14,7 @@ AVAILABLE_MODELS = ["qwen2.5:7b", "qwen2.5:0.5b"]
 STRINGS_URL = "http://localhost:8001/sse"
 ARITHMETIC_URL = "http://localhost:8002/sse"
 WEATHER_URL = "http://localhost:8003/sse"
+INFO_URL = "http://localhost:8004/sse"  # Example URL for the info server
 
 # --- Flask App Initialization ---
 app = Flask(__name__)
@@ -40,6 +41,7 @@ async def run_agent(prompt: str, model_name: str):
                 "strings": {"url": STRINGS_URL, "transport": "sse"},
                 "arithmetic": {"url": ARITHMETIC_URL, "transport": "sse"},
                 "weather": {"url": WEATHER_URL, "transport": "sse"},
+                "server_info": {"url": INFO_URL, "transport": "sse"},
             }
         ) as client:
             print("MCP Client connected.")
