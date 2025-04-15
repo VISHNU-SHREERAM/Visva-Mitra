@@ -1,16 +1,6 @@
-version: '3'
+version: "3"
 
 services:
-  strings-server:
-    build:
-      context: .
-      dockerfile: Dockerfile.strings
-    ports:
-      - "8001:8001"
-    networks:
-      - mcp-network
-    restart: always
-
   math-server:
     build:
       context: ./servers/math_server
@@ -40,7 +30,17 @@ services:
     networks:
       - mcp-network
     restart: always
-    privileged: true  # Needed for full system access
+    privileged: true # Needed for full system access
+
+  string-server:
+    build:
+      context: ./servers/string_server
+      dockerfile: Dockerfile
+    ports:
+      - "8001:8001"
+    networks:
+      - mcp-network
+    restart: always
 
 networks:
   mcp-network:
