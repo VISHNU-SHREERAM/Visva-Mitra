@@ -1,24 +1,12 @@
-version: '3'
+version: "3"
 
 services:
-  strings-server:
-    build:
-      context: .
-      dockerfile: Dockerfile.strings
-    ports:
-      - "8001:8001"
-    networks:
-      - mcp-network
-    restart: always
-
   math-server:
     build:
       context: ./servers/math_server
       dockerfile: Dockerfile
     ports:
-      - "8002:8002"
-    networks:
-      - mcp-network
+      - "127.0.0.1:8002:8002"
     restart: always
 
   weather-server:
@@ -26,22 +14,22 @@ services:
       context: ./servers/weather_server
       dockerfile: Dockerfile
     ports:
-      - "8003:8003"
-    networks:
-      - mcp-network
+      - "127.0.0.1:8003:8003"
     restart: always
 
-  process-server:
+  information-server:
     build:
       context: ./servers/process_server
       dockerfile: Dockerfile
     ports:
-      - "8004:8004"
-    networks:
-      - mcp-network
+      - "127.0.0.1:8004:8004"
     restart: always
-    privileged: true  # Needed for full system access
+    privileged: true
 
-networks:
-  mcp-network:
-    driver: bridge
+  string-server:
+    build:
+      context: ./servers/string_server
+      dockerfile: Dockerfile
+    ports:
+      - "127.0.0.1:8001:8001"
+    restart: always
