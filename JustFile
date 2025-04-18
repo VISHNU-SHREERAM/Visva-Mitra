@@ -1,0 +1,33 @@
+set shell := ["bash", "-cu"]
+set dotenv-load
+
+default: hello
+
+@hello:
+	echo "Hi there!"
+
+@setup:
+	echo "Setting up the environment..."
+	cd universal_assistant/client && uv sync
+	docker-compose build
+
+@run:
+	echo "Running the application..."
+	docker-compose up -d
+	cd universal_assistant/client && uv run mlflow ui &
+	cd universal_assistant/client && uv run prefect server start &
+	sleep 10
+	cd universal_assistant/client && uv run client_gui.py
+	echo "Application is running!"
+	echo "Vist http://localhost:5001 for GUI and http://localhost:5000 for MLFlow UI and Prefect UI at http://localhost:8080"
+
+@stop:
+	echo "Stopping the application..."
+	docker-compose down
+	echo "Application stopped!"
+
+	echo "Stopping the Prefect server..."
+
+@docs:
+	echo "Generating documentation...
+	

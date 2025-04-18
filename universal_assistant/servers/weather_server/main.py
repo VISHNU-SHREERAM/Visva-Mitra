@@ -1,32 +1,39 @@
-import os
+"""Weather Server using FastMCP and OpenWeatherMap API."""
+
+from typing import Any
+
 import httpx
 from mcp.server.fastmcp import FastMCP
 
-# Set your OpenWeatherMap API key here
+"""We kept this here so you dont have to"""
 API_KEY = "030894f9d4b324bdd7057af3a4ba2462"
 BASE_URL = "https://api.openweathermap.org/data/2.5/weather"
 
 mcp = FastMCP("Weather Server", host="0.0.0.0", port=8003)
 
 
-def kelvin_to_celsius(k):
+def kelvin_to_celsius(k: float) -> float:
+    """Convert Kelvin to Celsius."""
     return round(k - 273.15, 2)
 
 
-async def fetch_weather(city: str):
+async def fetch_weather(city: str) -> tuple[Any, Any]:
+    """Fetch weather data from OpenWeatherMap API."""
+    response_code = 200
     params = {
         "q": city,
         "appid": API_KEY,
     }
     async with httpx.AsyncClient() as client:
         resp = await client.get(BASE_URL, params=params)
-        if resp.status_code != 200:
+        if resp.status_code != response_code:
             return None, f"Error: {resp.status_code} - {resp.text}"
         data = resp.json()
         return data, None
 
 
-def format_weather(data):
+def format_weather(data: dict) -> str:
+    """Format weather data into a readable string."""
     main = data.get("main", {})
     weather = data.get("weather", [{}])[0]
     wind = data.get("wind", {})
