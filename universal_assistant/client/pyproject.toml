@@ -13,4 +13,6 @@ dependencies = [
     "langgraph>=0.3.30",
     "mcp[cli]>=1.6.0",
     "mlflow>=2.21.3",
+    "prefect>=3.3.5",
+    "pydantic-settings==2.8.1",
 ]
