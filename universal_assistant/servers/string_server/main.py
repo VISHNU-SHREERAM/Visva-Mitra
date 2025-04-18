@@ -1,3 +1,5 @@
+"""String Server."""
+
 from mcp.server.fastmcp import FastMCP
 
 mcp = FastMCP("StringTools", host="0.0.0.0", port=8001)
@@ -11,7 +13,7 @@ def reverse_string(text: str) -> str:
 
 @mcp.tool()
 def count_words(text: str) -> int:
-    """Counts the number of words in a sentence."""
+    """Count the number of words in a sentence."""
     return len(text.split())
 
 
