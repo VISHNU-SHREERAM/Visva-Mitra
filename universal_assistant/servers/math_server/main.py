@@ -2,7 +2,8 @@
 from mcp.server.fastmcp import FastMCP
 
 # Create an MCP server
-mcp = FastMCP("Arithmetic Server", host="localhost", port=8002)
+mcp = FastMCP("Arithmetic Server", host="0.0.0.0", port=8002)
+
 
 # Addition tool
 @mcp.tool()
@@ -10,17 +11,20 @@ def add(a: float, b: float) -> float:
     """Add two numbers"""
     return a + b
 
+
 # Subtraction tool
 @mcp.tool()
 def subtract(a: float, b: float) -> float:
     """Subtract b from a"""
     return a - b
 
+
 # Multiplication tool
 @mcp.tool()
 def multiply(a: float, b: float) -> float:
     """Multiply two numbers"""
     return a * b
+
 
 # Division tool
 @mcp.tool()
@@ -29,6 +33,7 @@ def divide(a: float, b: float) -> float:
     if b == 0:
         raise ValueError("Cannot divide by zero")
     return a / b
+
 
 # Add a simple resource to explain how to use this server
 @mcp.resource("help://arithmetic")
@@ -51,6 +56,7 @@ def arithmetic_help() -> str:
     3. Call multiply(2, 7) to get 14
     4. Call divide(20, 5) to get 4
     """
+
 
 if __name__ == "__main__":
     mcp.run("sse")

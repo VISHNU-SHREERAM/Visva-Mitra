@@ -6,10 +6,12 @@ from mcp.server.fastmcp import FastMCP
 API_KEY = "030894f9d4b324bdd7057af3a4ba2462"
 BASE_URL = "https://api.openweathermap.org/data/2.5/weather"
 
-mcp = FastMCP("Weather Server", host="localhost", port=8003)
+mcp = FastMCP("Weather Server", host="0.0.0.0", port=8003)
+
 
 def kelvin_to_celsius(k):
     return round(k - 273.15, 2)
+
 
 async def fetch_weather(city: str):
     params = {
@@ -22,6 +24,7 @@ async def fetch_weather(city: str):
             return None, f"Error: {resp.status_code} - {resp.text}"
         data = resp.json()
         return data, None
+
 
 def format_weather(data):
     main = data.get("main", {})
@@ -36,6 +39,7 @@ def format_weather(data):
         f"  Wind: {wind.get('speed', 'N/A')} m/s\n"
     )
 
+
 @mcp.tool()
 async def get_weather(city: str) -> str:
     """Get the current weather for a city."""
@@ -43,6 +47,7 @@ async def get_weather(city: str) -> str:
     if error:
         return error
     return format_weather(data)
+
 
 @mcp.resource("weather://{city}")
 async def weather_resource(city: str) -> str:
@@ -52,10 +57,12 @@ async def weather_resource(city: str) -> str:
         return error
     return format_weather(data)
 
+
 @mcp.prompt()
 def weather_report(city: str) -> str:
     """Prompt template for weather report."""
     return f"Generate a detailed weather report for {city}."
+
 
 if __name__ == "__main__":
     mcp.run("sse")

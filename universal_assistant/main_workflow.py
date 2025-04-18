@@ -1,47 +1,93 @@
 import asyncio
 import os
-from typing import Dict, List, Optional
+from typing import List
 from datetime import datetime
 
 from prefect import flow, task
-from prefect.task_runners import SequentialTaskRunner
+
+# from prefect.task_runners import SequentialTaskRunner
 import mlflow
 from mlflow.tracking import MlflowClient
 import json
 
-from mcp import ClientSession
-from mcp.client.sse import sse_client
-from langchain_mcp_adapters.tools import load_mcp_tools
+# from mcp import ClientSession
+
+# from mcp.client.sse import sse_client
+# from langchain_mcp_adapters.tools import load_mcp_tools
 from langchain_mcp_adapters.client import MultiServerMCPClient
 from langgraph.prebuilt import create_react_agent
 from langchain_ollama import ChatOllama
 from langchain_google_genai import ChatGoogleGenerativeAI
 from dotenv import load_dotenv
+import logging
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+)
+logger = logging.getLogger(__name__)
 
 # Load environment variables
 load_dotenv()
 
 # MLflow setup
-MLFLOW_TRACKING_URI = os.environ.get("MLFLOW_TRACKING_URI", "http://localhost:5000")
+# Change default to local file-based tracking instead of port 5555
+MLFLOW_TRACKING_URI = os.environ.get("MLFLOW_TRACKING_URI", "file:./mlruns")
 EXPERIMENT_NAME = "Universal-Assistant-MCP"
+USE_LOCAL_TRACKING = (
+    os.environ.get("USE_LOCAL_TRACKING", "true").lower() == "true"
+)  # Default to true
 
-mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
-client = MlflowClient()
 
-# Try to get the experiment or create it if it doesn't exist
-try:
-    experiment = client.get_experiment_by_name(EXPERIMENT_NAME)
-    if experiment:
-        experiment_id = experiment.experiment_id
-    else:
-        experiment_id = client.create_experiment(EXPERIMENT_NAME)
-except Exception as e:
-    print(f"Error setting up MLflow: {e}")
-    # Create a local directory for MLflow tracking if server isn't available
-    if not os.path.exists("mlruns"):
-        os.makedirs("mlruns")
-    mlflow.set_tracking_uri("file:./mlruns")
-    experiment_id = mlflow.create_experiment(EXPERIMENT_NAME)
+def setup_mlflow():
+    """Set up MLflow tracking with better error handling"""
+    global experiment_id
+
+    if USE_LOCAL_TRACKING:
+        logger.info("Using local MLflow tracking as specified by environment variable")
+        if not os.path.exists("mlruns"):
+            os.makedirs("mlruns")
+        mlflow.set_tracking_uri("file:./mlruns")
+        experiment = mlflow.get_experiment_by_name(EXPERIMENT_NAME)
+        experiment_id = (
+            experiment.experiment_id
+            if experiment
+            else mlflow.create_experiment(EXPERIMENT_NAME)
+        )
+        logger.info(f"MLflow tracking data saved to {os.path.abspath('mlruns')}")
+        logger.info(
+            "To view MLflow UI, run in a separate terminal: mlflow ui --port 5000"
+        )
+        return
+
+    logger.info(f"Attempting to connect to MLflow server at {MLFLOW_TRACKING_URI}")
+    mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
+    client = MlflowClient()
+
+    try:
+        experiment = client.get_experiment_by_name(EXPERIMENT_NAME)
+        if experiment:
+            experiment_id = experiment.experiment_id
+            logger.info(f"Connected to existing experiment: {EXPERIMENT_NAME}")
+        else:
+            experiment_id = client.create_experiment(EXPERIMENT_NAME)
+            logger.info(f"Created new experiment: {EXPERIMENT_NAME}")
+    except Exception as e:
+        logger.error(f"Error connecting to MLflow server: {e}")
+        logger.info("Falling back to local MLflow tracking")
+        if not os.path.exists("mlruns"):
+            os.makedirs("mlruns")
+        mlflow.set_tracking_uri("file:./mlruns")
+        experiment = mlflow.get_experiment_by_name(EXPERIMENT_NAME)
+        experiment_id = (
+            experiment.experiment_id
+            if experiment
+            else mlflow.create_experiment(EXPERIMENT_NAME)
+        )
+
+
+# Initialize MLflow
+setup_mlflow()
 
 # Server URLs
 SERVER_URLS = {

@@ -1,6 +1,6 @@
 from mcp.server.fastmcp import FastMCP
 
-mcp = FastMCP("StringTools", host="localhost", port=8001)
+mcp = FastMCP("StringTools", host="0.0.0.0", port=8001)
 
 
 @mcp.tool()

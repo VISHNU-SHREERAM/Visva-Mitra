@@ -1,5 +1,6 @@
 import os  # Import os to access environment variables
 import traceback  # Import traceback for detailed error logging
+import mlflow
 
 from dotenv import load_dotenv
 from flask import Flask, jsonify, render_template, request  # Import jsonify
@@ -38,13 +39,12 @@ INFO_URL = "http://localhost:8004/sse"  # Example URL for the info server
 app = Flask(__name__)
 
 
-# --- Agent Logic ---
+import time  # Add this at the top with other imports
+
+mlflow.set_tracking_uri("http://localhost:5000")
+
+
 async def run_agent(prompt: str, model_name: str):
-    """
-    Initializes the selected model (Ollama or Gemini), connects to MCP,
-    creates agent, invokes it.
-    Returns a dictionary containing the response or an error.
-    """
     if model_name not in AVAILABLE_MODELS:
         return {"error": f"Model '{model_name}' is not available or configured."}
 
@@ -52,117 +52,90 @@ async def run_agent(prompt: str, model_name: str):
     print(f"Model: {model_name}")
     print(f"Prompt: {prompt}")
 
-    try:
-        model = None  # Initialize model variable
+    # Start MLflow run
+    with mlflow.start_run():
+        mlflow.set_experiment("Universal Assistant")
+        mlflow.set_tag("model_name", model_name)
+        mlflow.set_tag("run_type", "agent_inference")
+        mlflow.log_param("model_name", model_name)
+        mlflow.log_param("prompt", prompt)
 
-        # --- Model Initialization Logic ---
-        if model_name.startswith("gemini"):
-            print(f"Initializing Google Gemini model: {model_name}")
-            google_api_key = os.getenv(GOOGLE_API_KEY_ENV_VAR)
-            if not google_api_key:
-                error_msg = f"Google API key not found. Please set the {GOOGLE_API_KEY_ENV_VAR} environment variable."
-                print(f"ERROR: {error_msg}")
-                return {"error": error_msg}
-            try:
-                # Ensure you have langchain-google-genai installed:
-                # pip install langchain-google-genai
+        start_time = time.time()
+
+        try:
+            model = None
+
+            if model_name.startswith("gemini"):
+                google_api_key = os.getenv(GOOGLE_API_KEY_ENV_VAR)
+                if not google_api_key:
+                    error_msg = f"Google API key not found. Please set the {GOOGLE_API_KEY_ENV_VAR} environment variable."
+                    mlflow.log_param("error", error_msg)
+                    return {"error": error_msg}
                 model = ChatGoogleGenerativeAI(
                     model=model_name,
                     google_api_key=google_api_key,
                     temperature=0,
-                    convert_system_message_to_human=True,  # Often helpful for ReAct agents with Gemini
+                    convert_system_message_to_human=True,
                 )
-                print("Gemini model initialized successfully.")
-            except Exception as e:
-                error_msg = f"Failed to initialize Gemini model: {e}"
-                print(f"ERROR: {error_msg}")
-                print(traceback.format_exc())
-                return {"error": error_msg}
-
-        # Check if it's a known Ollama model (or add more types later if needed)
-        elif ":" in model_name:  # Simple check for Ollama's typical naming convention
-            print(f"Initializing Ollama model: {model_name}")
-            try:
+                print("Gemini model initialized.")
+            elif ":" in model_name:
                 model = ChatOllama(model=model_name, temperature=0)
-                print("Ollama model initialized successfully.")
-            except Exception as e:
-                # Catch potential errors if Ollama server isn't running etc.
-                error_msg = f"Failed to initialize Ollama model '{model_name}': {e}. Is Ollama running?"
-                print(f"ERROR: {error_msg}")
-                print(traceback.format_exc())
+                print("Ollama model initialized.")
+            else:
+                error_msg = f"Unsupported model type: {model_name}"
+                mlflow.log_param("error", error_msg)
                 return {"error": error_msg}
-        else:
-            # This case should ideally be caught by the initial check, but belt-and-suspenders
-            error_msg = f"Model type for '{model_name}' could not be determined or is not supported."
-            print(f"ERROR: {error_msg}")
-            return {"error": error_msg}
 
-        # --- MCP Client and Agent Execution (Remains the same) ---
-        async with MultiServerMCPClient(
-            {
-                "strings": {"url": STRINGS_URL, "transport": "sse"},
-                "arithmetic": {"url": ARITHMETIC_URL, "transport": "sse"},
-                "weather": {"url": WEATHER_URL, "transport": "sse"},
-                "server_info": {"url": INFO_URL, "transport": "sse"},
-            }
-        ) as client:
-            print("MCP Client connected.")
-            tools = client.get_tools()
-            if not tools:
-                print("Warning: No tools loaded from MCP client.")
-                # Depending on the agent, this might be okay or an error
-            else:
-                print(f"Tools obtained: {[tool.name for tool in tools]}")
-
-            # Pass the initialized model (either Ollama or Gemini)
-            agent = create_react_agent(model, tools)
-            print("Agent created.")
-
-            # Use the standard list-of-messages format for input
-            invocation_input = {"messages": [HumanMessage(content=prompt)]}
-
-            print(f"Invoking agent with input: {invocation_input}")
-            result = await agent.ainvoke(invocation_input)
-            print(f"Agent raw result: {result}")  # Log raw result
-
-            # --- Result Extraction (Remains the same) ---
-            final_answer = None
-            if result and "messages" in result and isinstance(result["messages"], list):
-                for msg in reversed(result["messages"]):
-                    if isinstance(msg, AIMessage) and msg.content:
-                        # Check if it's not just an empty AIMessage indicating a tool call
-                        is_tool_call_indicator = (
-                            hasattr(msg, "tool_calls") and msg.tool_calls
-                        )
-                        if not is_tool_call_indicator or msg.content.strip():
-                            final_answer = msg.content
-                            break  # Found the final response
-
-            if final_answer:
-                print(f"Extracted final answer: {final_answer}")
-                return {"response": final_answer}
-            else:
-                print("Could not extract a final AIMessage response.")
-                last_message_content = (
-                    result["messages"][-1].content
-                    if result.get("messages")
-                    else "Agent finished without a clear final response."
-                )
-                return {
-                    "response": last_message_content
-                    or "Agent did not provide a final answer."
+            async with MultiServerMCPClient(
+                {
+                    "strings": {"url": STRINGS_URL, "transport": "sse"},
+                    "arithmetic": {"url": ARITHMETIC_URL, "transport": "sse"},
+                    "weather": {"url": WEATHER_URL, "transport": "sse"},
+                    "server_info": {"url": INFO_URL, "transport": "sse"},
                 }
+            ) as client:
+                tools = client.get_tools()
+                agent = create_react_agent(model, tools)
+                mlflow.log_param("agent_type", type(agent).__name__)
+                invocation_input = {"messages": [HumanMessage(content=prompt)]}
 
-    except ConnectionRefusedError as e:
-        error_msg = f"Connection Error: Could not connect to one or more MCP services ({e}). Please ensure they are running."
-        print(error_msg)
-        print(traceback.format_exc())  # Log stack trace
-        return {"error": error_msg}
-    except Exception as e:
-        error_msg = f"An unexpected error occurred during agent execution: {e}"
-        print(error_msg)
-        print(traceback.format_exc())  # Log stack trace for debugging
-        return {"error": error_msg}
+                result = await agent.ainvoke(invocation_input)
+                mlflow.log_text(str(result), "agent_output.txt")
+
+                final_answer = None
+                if (
+                    result
+                    and "messages" in result
+                    and isinstance(result["messages"], list)
+                ):
+                    for msg in reversed(result["messages"]):
+                        if isinstance(msg, AIMessage) and msg.content:
+                            is_tool_call = hasattr(msg, "tool_calls") and msg.tool_calls
+                            if not is_tool_call or msg.content.strip():
+                                final_answer = msg.content
+                                break
+
+                duration = time.time() - start_time
+                mlflow.log_metric("execution_time_seconds", duration)
+
+                if final_answer:
+                    mlflow.log_param("final_answer", final_answer)
+                    return {"response": final_answer}
+                else:
+                    fallback = (
+                        result["messages"][-1].content
+                        if result.get("messages")
+                        else "No answer."
+                    )
+                    mlflow.log_param("fallback_response", fallback)
+                    return {"response": fallback}
+
+        except Exception as e:
+            error_msg = f"Unexpected error: {e}"
+            print(error_msg)
+            mlflow.log_param("exception", error_msg)
+            mlflow.log_text(traceback.format_exc(), "error_traceback.txt")
+            return {"error": error_msg}
 
 
 # --- Flask Routes (No changes needed here) ---
@@ -201,4 +174,4 @@ async def chat():
 if __name__ == "__main__":
     # Set host='0.0.0.0' to make it accessible on your network
     # Debug=True is helpful for development (auto-reload)
-    app.run(debug=True, host="0.0.0.0", port=5000)
+    app.run(debug=True, host="0.0.0.0", port=5001)

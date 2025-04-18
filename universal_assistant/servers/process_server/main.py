@@ -2,7 +2,7 @@ import psutil
 from mcp.server.fastmcp import FastMCP
 
 # Create an MCP server
-mcp = FastMCP("Process Server", host="localhost", port=8004)
+mcp = FastMCP("Process Server", host="0.0.0.0", port=8004)
 
 
 @mcp.tool()
