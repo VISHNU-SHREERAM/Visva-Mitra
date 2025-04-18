@@ -10,7 +10,8 @@ default: hello
 	echo "Setting up the environment..."
 	cd universal_assistant/client && uv sync
 	docker-compose build
-
+	ollama pull qwen2.5:7b
+	ollama pull qwen2.5:0.5b
 @run:
 	echo "Running the application..."
 	docker-compose up -d
