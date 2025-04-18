@@ -110,6 +110,19 @@ async def run_agent_task(prompt: str, model_name: str):
                         ],
                         "transport": "stdio",
                     },
+                    "filesystem": {
+                        "command": "docker",
+                        "args": [
+                            "run",
+                            "-i",
+                            "--rm",
+                            "--mount",
+                            "type=bind,src=C:/Users/dhruv/OneDrive/Desktop/MLOps/MCP/universal_assistant/test,dst=/project",
+                            "mcp/filesystem",
+                            "/project",
+                        ],
+                        "transport": "stdio",
+                    },
                 }
             ) as client:
                 tools = client.get_tools()
