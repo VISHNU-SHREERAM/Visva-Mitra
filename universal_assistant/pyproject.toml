@@ -13,3 +13,6 @@ dependencies = [
     "mlflow>=2.21.3",
     "prefect>=3.3.5",
 ]
+
+[tool.uv.workspace]
+members = ["mk_docs"]
