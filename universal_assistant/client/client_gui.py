@@ -59,9 +59,7 @@ async def run_agent_task(prompt: str, model_name: str) -> dict:
             if model_name.startswith("gemini"):
                 google_api_key = os.getenv(GOOGLE_API_KEY_ENV_VAR)
                 if not google_api_key:
-                    error_msg = (
-                        f"Google API key not found. Please set the {GOOGLE_API_KEY_ENV_VAR} environment variable."
-                    )
+                    error_msg = f"Google API key not found. Please set the {GOOGLE_API_KEY_ENV_VAR} environment variable."
                     mlflow.log_param("error", error_msg)
                     return {"error": error_msg}
                 model = ChatGoogleGenerativeAI(
@@ -108,6 +106,22 @@ async def run_agent_task(prompt: str, model_name: str) -> dict:
                         ],
                         "transport": "stdio",
                     },
+                    "memory": {
+                        "command": "docker",
+                        "args": [
+                            "run",
+                            "-i",
+                            "--rm",
+                            # Mount a volume to persist memory data
+                            "--mount",
+                            "type=volume,src=mcp_memory_data,dst=/app/data",
+                            # You can set environment variables if needed
+                            "-e",
+                            "MEMORY_SIZE=1000",  # Optional: configure memory size
+                            "mcp/memory",  # This will be the image name
+                        ],
+                        "transport": "stdio",
+                    },
                 },
             ) as client:
                 tools = client.get_tools()
@@ -119,11 +133,17 @@ async def run_agent_task(prompt: str, model_name: str) -> dict:
                 mlflow.log_text(str(result), "agent_output.txt")
 
                 final_answer = None
-                if result and "messages" in result and isinstance(result["messages"], list):
+                if (
+                    result
+                    and "messages" in result
+                    and isinstance(result["messages"], list)
+                ):
                     for msg in reversed(result["messages"]):
                         if isinstance(msg, AIMessage) and msg.content:
                             is_tool_call = hasattr(msg, "tool_calls") and msg.tool_calls
-                            if not is_tool_call or (isinstance(msg.content, str) and msg.content.strip()):
+                            if not is_tool_call or (
+                                isinstance(msg.content, str) and msg.content.strip()
+                            ):
                                 final_answer = msg.content
                                 break
 
@@ -133,7 +153,11 @@ async def run_agent_task(prompt: str, model_name: str) -> dict:
                 if final_answer:
                     mlflow.log_param("final_answer", final_answer)
                     return {"response": final_answer}
-                fallback = result["messages"][-1].content if result.get("messages") else "No answer."
+                fallback = (
+                    result["messages"][-1].content
+                    if result.get("messages")
+                    else "No answer."
+                )
                 mlflow.log_param("fallback_response", fallback)
                 return {"response": fallback}
 
