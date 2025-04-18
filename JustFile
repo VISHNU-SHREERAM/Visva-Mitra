@@ -14,13 +14,15 @@ default: hello
 @run:
 	echo "Running the application..."
 	docker-compose up -d
-	cd universal_assistant/client && uv run mlflow ui &
-	cd universal_assistant/client && uv run prefect server start &
+	cd universal_assistant/client && uv run mlflow ui & pid1=$!
+	cd universal_assistant/client && uv run prefect server start & pid2=$!
 	sleep 10
-	cd universal_assistant/client && uv run client_gui.py
 	echo "Application is running!"
 	echo "Vist http://localhost:5001 for GUI and http://localhost:5000 for MLFlow UI and Prefect UI at http://localhost:8080"
-
+	cd universal_assistant/client && uv run client_gui.py
+	trap "kill $pid1 $pid2 $pid3 $pid4" SIGINT SIGTERM EXIT
+    wait
+	
 @stop:
 	echo "Stopping the application..."
 	docker-compose down
@@ -30,4 +32,5 @@ default: hello
 
 @docs:
 	echo "Generating documentation...
+	cd universal_assistant/mkdocs && uv run mkdocs serve
 	
