@@ -1,13 +1,4 @@
-# Viśva Mitra
-## One Assistant. Infinite Possibilities.
-
-## to setup do the following
-(Pre-req - need to have Ollama installed, just and uv)
-for setting up - "just setup"
-for runnning -   "just run"
-
-## Important
-- Add you GOOGLE_API_KEY in universal_assistant/.env file
+# Introduction to Viśva Mitra
 
 ## Introduction
 The Viśva Mitra universal assistant comes to your help by accessing the Tools from different MCP servers and wisely calling it to solve your query. It acts as an intelligent router between user requests and specialized tools, creating a unified experience.
@@ -36,7 +27,4 @@ When a user interacts with Viśva Mitra:
 4. Results from multiple tools may be combined or refined if necessary
 5. A coherent response is generated and delivered to the user
 
-## to see the docs
-
-- cd universal_assistant/mk_docs
-- uv run mkdocs serve
+This process happens seamlessly, giving users the impression of interacting with a single intelligent system rather than a collection of specialized tools.
