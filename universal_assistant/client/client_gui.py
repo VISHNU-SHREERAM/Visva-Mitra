@@ -1,15 +1,19 @@
 import os  # Import os to access environment variables
 import traceback  # Import traceback for detailed error logging
-import mlflow
 
+import mlflow
 from dotenv import load_dotenv
 from flask import Flask, jsonify, render_template, request  # Import jsonify
-from langchain_core.messages import AIMessage, HumanMessage  # Import message types
+from langchain_core.messages import (
+    AIMessage,  # Import message types
+    HumanMessage,
+)
 from langchain_google_genai import (
     ChatGoogleGenerativeAI,  # <--- Added import for Gemini
 )
 from langchain_mcp_adapters.client import MultiServerMCPClient
 
+# SubprocessToolClient
 # Import necessary model classes
 from langchain_ollama import ChatOllama
 from langgraph.prebuilt import create_react_agent
@@ -92,6 +96,18 @@ async def run_agent(prompt: str, model_name: str):
                     "arithmetic": {"url": ARITHMETIC_URL, "transport": "sse"},
                     "weather": {"url": WEATHER_URL, "transport": "sse"},
                     "server_info": {"url": INFO_URL, "transport": "sse"},
+                    "brave_search": {
+                        "command": "docker",
+                        "args": [
+                            "run",
+                            "-i",
+                            "--rm",
+                            "-e",
+                            "BRAVE_API_KEY=BSAxGC1s-JGptZejZb7W-srU3C38tUa",
+                            "mcp/brave-search",
+                        ],
+                        "transport": "stdio",
+                    },
                 }
             ) as client:
                 tools = client.get_tools()
