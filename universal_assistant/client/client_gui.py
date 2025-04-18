@@ -1,7 +1,7 @@
 import os  # Import os to access environment variables
 import traceback  # Import traceback for detailed error logging
 import mlflow
-
+from prefect import flow, task  # Import flow and task decorators from Prefect
 from dotenv import load_dotenv
 from flask import Flask, jsonify, render_template, request  # Import jsonify
 from langchain_core.messages import AIMessage, HumanMessage  # Import message types
@@ -44,7 +44,8 @@ import time  # Add this at the top with other imports
 mlflow.set_tracking_uri("http://localhost:5000")
 
 
-async def run_agent(prompt: str, model_name: str):
+@task(name="run_agent_task", retries=1)
+async def run_agent_task(prompt: str, model_name: str):
     if model_name not in AVAILABLE_MODELS:
         return {"error": f"Model '{model_name}' is not available or configured."}
 
@@ -138,6 +139,11 @@ async def run_agent(prompt: str, model_name: str):
             return {"error": error_msg}
 
 
+@flow
+async def run_agent_flow(prompt: str, model_name: str):
+    return await run_agent_task(prompt, model_name)
+
+
 # --- Flask Routes (No changes needed here) ---
 @app.route("/")
 def index():
@@ -159,7 +165,7 @@ async def chat():
         model_name = data["model"]
 
         # Run the async agent function (which now handles both model types)
-        result = await run_agent(prompt, model_name)
+        result = await run_agent_flow(prompt, model_name)
 
         # Return the result (response or error) as JSON
         return jsonify(result)
