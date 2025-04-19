@@ -36,6 +36,49 @@ When a user interacts with Viśva Mitra:
 4. Results from multiple tools may be combined or refined if necessary
 5. A coherent response is generated and delivered to the user
 
+## Tools And Servers
+List of tools available:
+- String Server
+     - reverse_string
+     - count_words
+- Math Server
+     - add
+     - subtract
+     - multiply
+     - divide
+- Weather Server
+     - get_weather
+- System Info Server
+     - get_cpu_info
+     - get_memory_info
+     - get_disk_info
+     - list_running_processes
+- Brave Search Server 
+     - brave_web_search
+     - brave_local_search
+- File Server
+     - read_file
+     - read_multiple_files
+     - write_file
+     - edit_file
+     - create_directory
+     - list_directory
+     - directory_tree
+     - move_file
+     - search_files
+     - get_file_info
+     - list_allowed_directories
+- Memory Server
+     - create_entities
+     - create_relations
+     - add_observations
+     - delete_entities
+     - delete_observations
+     - delete_relations
+     - read_graph
+     - search_nodes
+     - open_node
+
 ## to see the docs
 
 - cd universal_assistant/mk_docs
