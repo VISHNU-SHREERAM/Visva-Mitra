@@ -21,7 +21,7 @@ default: hello
 	echo "Application is running!"
 	echo "Vist http://localhost:5001 for GUI and http://localhost:5000 for MLFlow UI and Prefect UI at http://localhost:8080"
 	cd universal_assistant/client && uv run client_gui.py
-	trap "kill $pid1 $pid2 $pid3 $pid4" SIGINT SIGTERM EXIT
+	trap "kill $pid1 $pid2" SIGINT SIGTERM EXIT
     wait
 	
 @stop:
