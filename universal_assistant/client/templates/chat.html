@@ -126,6 +126,35 @@
             background-color: #cccccc;
             cursor: not-allowed;
         }
+        /* Styles for thinking toggle */
+        .thinking-toggle {
+            margin-top: 8px;
+            font-size: 0.85em;
+            color: #4a4a8a;
+            cursor: pointer;
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 12px;
+            background-color: #e4e4eb;
+            transition: background-color 0.2s;
+        }
+        
+        .thinking-toggle:hover {
+            background-color: #d4d4e1;
+        }
+        
+        .thinking-content {
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #f0f0f5;
+            border-left: 3px solid #4a4a8a;
+            border-radius: 4px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            display: none;
+            font-size: 0.9em;
+            color: #555;
+        }
         @media (max-width: 700px) {
             .chat-wrapper {
                 width: 98vw;
@@ -140,7 +169,7 @@
 <body>
     <div class="chat-wrapper">
         <div class="header">
-            <h1>Chat Agent</h1>
+            <h1>Viśva Mitra - your Universal Assistant</h1>
             <div class="model-selector">
                 <label for="model">Model:</label>
                 <select id="model">
@@ -166,10 +195,46 @@
         const sendButton = document.getElementById('send-button');
         const modelSelector = document.getElementById('model');
 
-        function addMessage(text, sender) {
+        function addMessage(text, sender, hasThinking = false, thinkingContent = null) {
             const messageDiv = document.createElement('div');
             messageDiv.classList.add('message', sender); // sender is 'user', 'bot', 'error', or 'typing'
-            messageDiv.textContent = text;
+            
+            // For messages with thinking parts
+            if (hasThinking && thinkingContent) {
+                // Create a wrapper for the main message
+                const messageText = document.createElement('div');
+                messageText.textContent = text;
+                messageDiv.appendChild(messageText);
+                
+                // Create toggle button
+                const toggleBtn = document.createElement('div');
+                toggleBtn.classList.add('thinking-toggle');
+                toggleBtn.textContent = 'Show thinking process';
+                toggleBtn.dataset.state = 'hidden';
+                messageDiv.appendChild(toggleBtn);
+                
+                // Create thinking content container (hidden by default)
+                const thinkingDiv = document.createElement('div');
+                thinkingDiv.classList.add('thinking-content');
+                thinkingDiv.textContent = thinkingContent;
+                messageDiv.appendChild(thinkingDiv);
+                
+                // Add click event to toggle
+                toggleBtn.addEventListener('click', () => {
+                    if (toggleBtn.dataset.state === 'hidden') {
+                        thinkingDiv.style.display = 'block';
+                        toggleBtn.textContent = 'Hide thinking process';
+                        toggleBtn.dataset.state = 'shown';
+                    } else {
+                        thinkingDiv.style.display = 'none';
+                        toggleBtn.textContent = 'Show thinking process';
+                        toggleBtn.dataset.state = 'hidden';
+                    }
+                });
+            } else {
+                messageDiv.textContent = text;
+            }
+            
             chatContainer.appendChild(messageDiv);
             // Scroll to the bottom
             chatContainer.scrollTop = chatContainer.scrollHeight;
@@ -218,7 +283,12 @@
                     if (data.error) {
                          addMessage(`Error: ${data.error}`, 'error');
                     } else if (data.response) {
-                        addMessage(data.response, 'bot');
+                        // Check if response has thinking content
+                        if (data.has_thinking && data.thinking) {
+                            addMessage(data.response, 'bot', true, data.thinking);
+                        } else {
+                            addMessage(data.response, 'bot');
+                        }
                     } else {
                          addMessage("Received an empty response from the bot.", 'error');
                     }

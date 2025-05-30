@@ -18,12 +18,13 @@ from pydantic import Json
 load_dotenv()
 
 GOOGLE_API_KEY_ENV_VAR = "GOOGLE_API_KEY"
-
+BRAVE_API_KEY_ENV_VAR = "BRAVE_API_KEY"
 AVAILABLE_MODELS = [
-    "qwen2.5:7b",
-    "qwen2.5:0.5b",
+    "qwen3:8b",
+    # "qwen2.5:7b",
+    # "qwen2.5:0.5b",
     "gemini-2.0-flash",
-    "gemini-2.5-pro-preview-03-25",
+    # "gemini-2.5-pro-preview-03-25",
 ]
 STRINGS_URL = "http://localhost:8001/sse"
 ARITHMETIC_URL = "http://localhost:8002/sse"
@@ -88,40 +89,42 @@ async def run_agent_task(prompt: str, model_name: str) -> dict:
                             "-i",
                             "--rm",
                             "-e",
-                            "BRAVE_API_KEY=BSAxGC1s-JGptZejZb7W-srU3C38tUa",
+                            "BRAVE_API_KEY=" + os.getenv(
+                                BRAVE_API_KEY_ENV_VAR, ""
+                            ),
                             "mcp/brave-search",
                         ],
                         "transport": "stdio",
                     },
-                    "filesystem": {
-                        "command": "docker",
-                        "args": [
-                            "run",
-                            "-i",
-                            "--rm",
-                            "--mount",
-                            "type=bind,src=C:/Users/dhruv/OneDrive/Desktop/MLOps/MCP/universal_assistant/test,dst=/project",
-                            "mcp/filesystem",
-                            "/project",
-                        ],
-                        "transport": "stdio",
-                    },
-                    "memory": {
-                        "command": "docker",
-                        "args": [
-                            "run",
-                            "-i",
-                            "--rm",
-                            # Mount a volume to persist memory data
-                            "--mount",
-                            "type=volume,src=mcp_memory_data,dst=/app/data",
-                            # You can set environment variables if needed
-                            "-e",
-                            "MEMORY_SIZE=1000",  # Optional: configure memory size
-                            "mcp/memory",  # This will be the image name
-                        ],
-                        "transport": "stdio",
-                    },
+                    # "filesystem": {
+                    #     "command": "docker",
+                    #     "args": [
+                    #         "run",
+                    #         "-i",
+                    #         "--rm",
+                    #         "--mount",
+                    #         "type=bind,src=C:/Users/dhruv/OneDrive/Desktop/MLOps/MCP/universal_assistant/test,dst=/project",
+                    #         "mcp/filesystem",
+                    #         "/project",
+                    #     ],
+                    #     "transport": "stdio",
+                    # },
+                    # "memory": {
+                    #     "command": "docker",
+                    #     "args": [
+                    #         "run",
+                    #         "-i",
+                    #         "--rm",
+                    #         # Mount a volume to persist memory data
+                    #         "--mount",
+                    #         "type=volume,src=mcp_memory_data,dst=/app/data",
+                    #         # You can set environment variables if needed
+                    #         "-e",
+                    #         "MEMORY_SIZE=1000",  # Optional: configure memory size
+                    #         "mcp/memory",  # This will be the image name
+                    #     ],
+                    #     "transport": "stdio",
+                    # },
                 },
             ) as client:
                 tools = client.get_tools()
@@ -147,12 +150,44 @@ async def run_agent_task(prompt: str, model_name: str) -> dict:
                                 final_answer = msg.content
                                 break
 
+                # Process the response to extract thinking parts if present
+                has_thinking = False
+                thinking_content = None
+                clean_response = None
+
+                if final_answer and "<think>" in final_answer and "</think>" in final_answer:
+                    has_thinking = True
+                    import re
+
+                    # Extract the thinking part
+                    thinking_match = re.search(
+                        r"<think>(.*?)</think>", final_answer, re.DOTALL
+                    )
+                    if thinking_match:
+                        thinking_content = thinking_match.group(1).strip()
+                        # Remove the thinking part from the final answer
+                        clean_response = re.sub(
+                            r"<think>.*?</think>",
+                            "",
+                            final_answer,
+                            flags=re.DOTALL,
+                        ).strip()
+                    else:
+                        clean_response = final_answer
+                else:
+                    clean_response = final_answer
+
                 duration = time.time() - start_time
                 mlflow.log_metric("execution_time_seconds", duration)
 
                 if final_answer:
                     mlflow.log_param("final_answer", final_answer)
-                    return {"response": final_answer}
+                    return {
+                        "response": clean_response,
+                        "has_thinking": has_thinking,
+                        "thinking": thinking_content if has_thinking else None,
+                        "raw_response": final_answer,
+                    }
                 fallback = (
                     result["messages"][-1].content
                     if result.get("messages")
