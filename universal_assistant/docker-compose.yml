@@ -1,6 +1,28 @@
-version: "3"
-
 services:
+  transcriber:
+    build:
+      context: ./client/transcriber
+      dockerfile: Dockerfile
+    ports:
+      - "7777:7777"
+    restart: always
+    volumes:
+      - whisper_models:/app/models  # Cache Whisper models between restarts
+    environment:
+      - PYTHONUNBUFFERED=1
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:7777/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s  # Give time for Whisper model to download
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
   math-server:
     build:
       context: ./servers/math_server
@@ -33,3 +55,6 @@ services:
     ports:
       - "8001:8001"
     restart: always
+
+volumes:
+  whisper_models:  # Named volume for persisting Whisper models

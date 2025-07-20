@@ -32,7 +32,9 @@ WEATHER_URL = "http://localhost:8003/sse"
 INFO_URL = "http://localhost:8004/sse"
 
 
-app = Flask(__name__)
+app = Flask(__name__, 
+            static_folder='static',  # Define the static folder explicitly
+            template_folder='templates')  # Define the template folder explicitly
 
 
 mlflow.set_tracking_uri("http://localhost:5000")

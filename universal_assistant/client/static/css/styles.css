@@ -1,0 +1,469 @@
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    background-color: #f5f7fa;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.chat-wrapper {
+    width: 80vw;
+    max-width: 1000px;
+    min-width: 320px;
+    height: 85vh;
+    background: #fff;
+    border-radius: 18px;
+    box-shadow: 0 8px 30px rgba(60,60,120,0.12), 0 2px 8px rgba(60,60,120,0.08);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.header {
+    background: linear-gradient(135deg, #4a4a8a 0%, #353570 100%);
+    color: white;
+    padding: 16px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.header h1 {
+    margin: 0;
+    font-size: 1.4em;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+.model-selector label {
+    margin-right: 8px;
+    font-size: 0.9em;
+    font-weight: 500;
+}
+
+.model-selector select {
+    padding: 6px 10px;
+    border-radius: 6px;
+    border: 1px solid rgba(255,255,255,0.3);
+    background-color: rgba(255,255,255,0.1);
+    color: white;
+    font-size: 0.9em;
+    transition: all 0.2s ease;
+}
+
+.model-selector select:hover {
+    background-color: rgba(255,255,255,0.2);
+}
+
+.model-selector select:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(255,255,255,0.3);
+}
+
+.model-selector option {
+    background-color: #4a4a8a;
+    color: white;
+}
+
+.chat-container {
+    flex-grow: 1;
+    overflow-y: auto;
+    padding: 24px 16px 16px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    background: #f8fafd;
+}
+
+.message {
+    padding: 12px 18px;
+    border-radius: 18px;
+    max-width: 85%;
+    word-wrap: break-word;
+    white-space: pre-wrap;
+    line-height: 1.5;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    transition: transform 0.2s ease;
+    animation: message-fade-in 0.3s ease;
+}
+
+@keyframes message-fade-in {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.message:hover {
+    transform: translateY(-2px);
+}
+
+.message.user {
+    background: linear-gradient(135deg, #4a4a8a 0%, #3d3d7a 100%);
+    color: white;
+    align-self: flex-end;
+    border-bottom-right-radius: 4px;
+}
+
+.message.bot {
+    background-color: white;
+    color: #333;
+    align-self: flex-start;
+    border-bottom-left-radius: 4px;
+    border-left: 3px solid #4a4a8a;
+}
+
+.message.error {
+    background-color: #ffebee;
+    color: #c62828;
+    align-self: flex-start;
+    border: 1px solid #f44336;
+    border-bottom-left-radius: 4px;
+}
+
+.message.typing {
+    color: #888;
+    font-style: italic;
+    align-self: flex-start;
+    background: transparent;
+    box-shadow: none;
+    border: none;
+    padding: 0 0 0 10px;
+}
+
+.input-area {
+    display: flex;
+    padding: 16px 24px;
+    border-top: 1px solid #eee;
+    background-color: #fff;
+    box-shadow: 0 -2px 10px rgba(0,0,0,0.03);
+}
+
+.input-area input[type="text"] {
+    flex-grow: 1;
+    padding: 14px 20px;
+    border: 1px solid #ddd;
+    border-radius: 24px;
+    margin-right: 12px;
+    font-size: 1em;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05) inset;
+    transition: all 0.2s ease;
+}
+
+.input-area input[type="text"]:focus {
+    outline: none;
+    border-color: #4a4a8a;
+    box-shadow: 0 0 0 2px rgba(74, 74, 138, 0.2);
+}
+
+.input-area button {
+    padding: 12px 24px;
+    background: linear-gradient(135deg, #4a4a8a 0%, #353570 100%);
+    color: white;
+    border: none;
+    border-radius: 24px;
+    cursor: pointer;
+    font-size: 1em;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 5px rgba(74, 74, 138, 0.2);
+}
+
+.input-area button:hover {
+    background: linear-gradient(135deg, #424280 0%, #2e2e60 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(74, 74, 138, 0.3);
+}
+
+.input-area button:disabled {
+    background: #cccccc;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+/* Microphone button styles */
+.mic-toggle {
+    width: 48px !important;
+    height: 48px !important;
+    padding: 12px !important;
+    margin-right: 8px !important;
+    background: linear-gradient(135deg, #4a4a8a 0%, #353570 100%) !important;
+    color: white;
+    border: none;
+    border-radius: 50% !important;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 5px rgba(74, 74, 138, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.mic-toggle svg {
+    width: 20px;
+    height: 20px;
+    stroke-width: 2.5;
+}
+
+.mic-toggle:hover {
+    background: linear-gradient(135deg, #424280 0%, #2e2e60 100%) !important;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(74, 74, 138, 0.3);
+}
+
+.mic-toggle.recording {
+    background: linear-gradient(135deg, #e53e3e 0%, #c53030 100%) !important;
+    animation: pulse 1.5s infinite;
+}
+
+.mic-toggle.recording:hover {
+    background: linear-gradient(135deg, #d53030 0%, #b12929 100%) !important;
+}
+
+@keyframes pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(229, 62, 62, 0.4);
+    }
+    70% {
+        box-shadow: 0 0 0 10px rgba(229, 62, 62, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(229, 62, 62, 0);
+    }
+}
+
+/* Speech toggle button styles */
+.speech-toggle {
+    background: linear-gradient(135deg, #4a4a8a 0%, #353570 100%);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 8px 16px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 0.9em;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-right: 16px;
+}
+
+.speech-toggle svg {
+    width: 16px;
+    height: 16px;
+}
+
+.speech-toggle:hover {
+    background: linear-gradient(135deg, #424280 0%, #2e2e60 100%);
+    transform: translateY(-1px);
+}
+
+.speech-toggle.active {
+    background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+}
+
+.speech-toggle.active:hover {
+    background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+}
+
+/* Styles for thinking toggle */
+.thinking-toggle {
+    margin-top: 10px;
+    font-size: 0.85em;
+    color: #4a4a8a;
+    cursor: pointer;
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 12px;
+    background-color: #e4e4eb;
+    transition: all 0.2s;
+    font-weight: 500;
+}
+
+.thinking-toggle:hover {
+    background-color: #d4d4e1;
+    transform: translateY(-1px);
+}
+
+.thinking-content {
+    margin-top: 12px;
+    padding: 12px;
+    background-color: #f0f0f5;
+    border-left: 3px solid #4a4a8a;
+    border-radius: 6px;
+    font-family: monospace;
+    white-space: pre-wrap;
+    display: none;
+    font-size: 0.9em;
+    color: #444;
+    overflow-x: auto;
+}
+
+/* Markdown styles */
+.message.bot p {
+    margin: 0 0 12px 0;
+}
+
+.message.bot p:last-child {
+    margin-bottom: 0;
+}
+
+.message.bot h1, .message.bot h2, .message.bot h3, 
+.message.bot h4, .message.bot h5, .message.bot h6 {
+    margin-top: 16px;
+    margin-bottom: 10px;
+    font-weight: 600;
+    color: #333;
+}
+
+.message.bot h1 { font-size: 1.4em; }
+.message.bot h2 { font-size: 1.3em; }
+.message.bot h3 { font-size: 1.2em; }
+.message.bot h4 { font-size: 1.1em; }
+.message.bot h5, .message.bot h6 { font-size: 1em; }
+
+.message.bot ul, .message.bot ol {
+    margin: 10px 0;
+    padding-left: 20px;
+}
+
+.message.bot li {
+    margin-bottom: 5px;
+}
+
+.message.bot code {
+    background-color: #f1f1f1;
+    padding: 2px 4px;
+    border-radius: 3px;
+    font-family: monospace;
+    font-size: 0.9em;
+    color: #e01e5a;
+}
+
+.message.bot pre {
+    background-color: #f6f8fa;
+    padding: 10px;
+    border-radius: 6px;
+    overflow-x: auto;
+    margin: 12px 0;
+}
+
+.message.bot pre code {
+    background-color: transparent;
+    padding: 0;
+    color: #333;
+    display: block;
+    line-height: 1.5;
+}
+
+.message.bot blockquote {
+    border-left: 3px solid #ddd;
+    padding-left: 12px;
+    margin-left: 0;
+    color: #555;
+    font-style: italic;
+}
+
+.message.bot a {
+    color: #4a4a8a;
+    text-decoration: none;
+    border-bottom: 1px dotted #4a4a8a;
+}
+
+.message.bot a:hover {
+    border-bottom: 1px solid #4a4a8a;
+}
+
+.message.bot table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 12px 0;
+}
+
+.message.bot th, .message.bot td {
+    border: 1px solid #ddd;
+    padding: 6px 10px;
+    text-align: left;
+}
+
+.message.bot th {
+    background-color: #f5f5f5;
+    font-weight: 600;
+}
+
+/* Speech button styles */
+.speech-controls {
+    display: flex;
+    align-items: center;
+    margin-left: 10px;
+}
+
+.speech-toggle {
+    display: flex;
+    align-items: center;
+    background: linear-gradient(135deg, #4a4a8a 0%, #353570 100%);
+    color: white;
+    border: none;
+    border-radius: 24px;
+    padding: 6px 14px;
+    font-size: 0.9em;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 5px rgba(74, 74, 138, 0.2);
+}
+
+.speech-toggle:hover {
+    background: linear-gradient(135deg, #424280 0%, #2e2e60 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(74, 74, 138, 0.3);
+}
+
+.speech-toggle.active {
+    background: linear-gradient(135deg, #35a56f 0%, #2a8056 100%);
+}
+
+.speech-toggle svg {
+    margin-right: 6px;
+    width: 16px;
+    height: 16px;
+}
+
+.speech-toggle.speaking {
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.7; }
+    100% { opacity: 1; }
+}
+
+/* Responsive styles */
+@media (max-width: 900px) {
+    .chat-wrapper {
+        width: 95vw;
+        height: 90vh;
+    }
+    .message {
+        max-width: 90%;
+    }
+}
+
+@media (max-width: 600px) {
+    .chat-wrapper {
+        width: 100vw;
+        height: 100vh;
+        border-radius: 0;
+    }
+    .header {
+        padding: 12px 16px;
+    }
+    .header h1 {
+        font-size: 1.2em;
+    }
+    .message {
+        max-width: 92%;
+    }
+}

@@ -4,181 +4,39 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LangChain Chat Agent</title>
-    <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            margin: 0;
-            background-color: #f4f4f9;
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .chat-wrapper {
-            width: 60vw;
-            max-width: 480px;
-            min-width: 320px;
-            height: 80vh;
-            background: #fff;
-            border-radius: 18px;
-            box-shadow: 0 4px 24px rgba(60,60,120,0.10), 0 1.5px 6px rgba(60,60,120,0.08);
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-        }
-        .header {
-            background-color: #4a4a8a;
-            color: white;
-            padding: 16px 24px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.08);
-        }
-        .header h1 {
-            margin: 0;
-            font-size: 1.3em;
-        }
-        .model-selector label {
-            margin-right: 5px;
-            font-size: 0.9em;
-        }
-        .model-selector select {
-            padding: 5px;
-            border-radius: 4px;
-            border: 1px solid #ccc;
-            background-color: #fff;
-        }
-        .chat-container {
-            flex-grow: 1;
-            overflow-y: auto;
-            padding: 24px 16px 16px 16px;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            background: #f7f8fa;
-        }
-        .message {
-            padding: 10px 15px;
-            border-radius: 18px;
-            max-width: 75%;
-            word-wrap: break-word;
-            white-space: pre-wrap;
-            line-height: 1.4;
-        }
-        .message.user {
-            background-color: #4a4a8a;
-            color: white;
-            align-self: flex-end;
-            border-bottom-right-radius: 4px;
-        }
-        .message.bot {
-            background-color: #e9e9eb;
-            color: #333;
-            align-self: flex-start;
-            border-bottom-left-radius: 4px;
-        }
-        .message.error {
-            background-color: #ffebee;
-            color: #c62828;
-            align-self: flex-start;
-            border: 1px solid #f44336;
-            border-bottom-left-radius: 4px;
-        }
-        .message.typing {
-            color: #888;
-            font-style: italic;
-            align-self: flex-start;
-            background: transparent;
-            box-shadow: none;
-            border: none;
-            padding: 0;
-        }
-        .input-area {
-            display: flex;
-            padding: 16px;
-            border-top: 1px solid #eee;
-            background-color: #fff;
-            box-shadow: 0 -2px 5px rgba(0,0,0,0.03);
-        }
-        .input-area input[type="text"] {
-            flex-grow: 1;
-            padding: 12px 18px;
-            border: 1px solid #ccc;
-            border-radius: 20px;
-            margin-right: 10px;
-            font-size: 1em;
-        }
-        .input-area button {
-            padding: 10px 20px;
-            background-color: #4a4a8a;
-            color: white;
-            border: none;
-            border-radius: 20px;
-            cursor: pointer;
-            font-size: 1em;
-            transition: background-color 0.2s ease;
-        }
-        .input-area button:hover {
-            background-color: #35356a;
-        }
-        .input-area button:disabled {
-            background-color: #cccccc;
-            cursor: not-allowed;
-        }
-        /* Styles for thinking toggle */
-        .thinking-toggle {
-            margin-top: 8px;
-            font-size: 0.85em;
-            color: #4a4a8a;
-            cursor: pointer;
-            display: inline-block;
-            padding: 2px 8px;
-            border-radius: 12px;
-            background-color: #e4e4eb;
-            transition: background-color 0.2s;
-        }
-        
-        .thinking-toggle:hover {
-            background-color: #d4d4e1;
-        }
-        
-        .thinking-content {
-            margin-top: 10px;
-            padding: 10px;
-            background-color: #f0f0f5;
-            border-left: 3px solid #4a4a8a;
-            border-radius: 4px;
-            font-family: monospace;
-            white-space: pre-wrap;
-            display: none;
-            font-size: 0.9em;
-            color: #555;
-        }
-        @media (max-width: 700px) {
-            .chat-wrapper {
-                width: 98vw;
-                min-width: unset;
-                max-width: unset;
-                height: 100vh;
-                border-radius: 0;
-            }
-        }
-    </style>
+    <!-- Add Marked.js for Markdown parsing -->
+    <script src="https://cdn.jsdelivr.net/npm/marked@4.3.0/marked.min.js"></script>
+    <!-- Add highlight.js for code syntax highlighting -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/github.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
 </head>
 <body>
     <div class="chat-wrapper">
         <div class="header">
             <h1>Viśva Mitra - your Universal Assistant</h1>
-            <div class="model-selector">
-                <label for="model">Model:</label>
-                <select id="model">
-                    {% for model_option in models %}
-                        <option value="{{ model_option }}" {% if model_option == default_model %}selected{% endif %}>
-                            {{ model_option }}
-                        </option>
-                    {% endfor %}
-                </select>
+            <div style="display: flex; align-items: center;">
+                <div class="speech-controls">
+                    <button id="speech-toggle" class="speech-toggle">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M11 5L6 9H2v6h4l5 4V5z"></path>
+                            <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+                            <path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>
+                        </svg>
+                        <span id="speech-status">Speech: OFF</span>
+                    </button>
+                </div>
+                <div class="model-selector">
+                    <label for="model">Model:</label>
+                    <select id="model">
+                        {% for model_option in models %}
+                            <option value="{{ model_option }}" {% if model_option == default_model %}selected{% endif %}>
+                                {{ model_option }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
             </div>
         </div>
         <div class="chat-container" id="chat-container">
@@ -186,137 +44,19 @@
         </div>
         <div class="input-area">
             <input type="text" id="user-input" placeholder="Type your message...">
+            <button id="mic-toggle" class="mic-toggle" title="Click to record audio">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                    <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                    <line x1="12" y1="19" x2="12" y2="23"></line>
+                    <line x1="8" y1="23" x2="16" y2="23"></line>
+                </svg>
+            </button>
             <button id="send-button">Send</button>
         </div>
     </div>
-    <script>
-        const chatContainer = document.getElementById('chat-container');
-        const userInput = document.getElementById('user-input');
-        const sendButton = document.getElementById('send-button');
-        const modelSelector = document.getElementById('model');
-
-        function addMessage(text, sender, hasThinking = false, thinkingContent = null) {
-            const messageDiv = document.createElement('div');
-            messageDiv.classList.add('message', sender); // sender is 'user', 'bot', 'error', or 'typing'
-            
-            // For messages with thinking parts
-            if (hasThinking && thinkingContent) {
-                // Create a wrapper for the main message
-                const messageText = document.createElement('div');
-                messageText.textContent = text;
-                messageDiv.appendChild(messageText);
-                
-                // Create toggle button
-                const toggleBtn = document.createElement('div');
-                toggleBtn.classList.add('thinking-toggle');
-                toggleBtn.textContent = 'Show thinking process';
-                toggleBtn.dataset.state = 'hidden';
-                messageDiv.appendChild(toggleBtn);
-                
-                // Create thinking content container (hidden by default)
-                const thinkingDiv = document.createElement('div');
-                thinkingDiv.classList.add('thinking-content');
-                thinkingDiv.textContent = thinkingContent;
-                messageDiv.appendChild(thinkingDiv);
-                
-                // Add click event to toggle
-                toggleBtn.addEventListener('click', () => {
-                    if (toggleBtn.dataset.state === 'hidden') {
-                        thinkingDiv.style.display = 'block';
-                        toggleBtn.textContent = 'Hide thinking process';
-                        toggleBtn.dataset.state = 'shown';
-                    } else {
-                        thinkingDiv.style.display = 'none';
-                        toggleBtn.textContent = 'Show thinking process';
-                        toggleBtn.dataset.state = 'hidden';
-                    }
-                });
-            } else {
-                messageDiv.textContent = text;
-            }
-            
-            chatContainer.appendChild(messageDiv);
-            // Scroll to the bottom
-            chatContainer.scrollTop = chatContainer.scrollHeight;
-            return messageDiv; // Return the element if needed (e.g., for removing typing indicator)
-        }
-
-        async function sendMessage() {
-            const prompt = userInput.value.trim();
-            const selectedModel = modelSelector.value;
-
-            if (!prompt) return; // Don't send empty messages
-
-            addMessage(prompt, 'user');
-            userInput.value = ''; // Clear input field
-            sendButton.disabled = true; // Disable button while processing
-
-            const typingIndicator = addMessage('Bot is thinking...', 'typing');
-
-            try {
-                const response = await fetch('/chat', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ prompt: prompt, model: selectedModel }),
-                });
-
-                chatContainer.removeChild(typingIndicator); // Remove typing indicator
-
-                if (!response.ok) {
-                     // Try to parse error from backend JSON response
-                     let errorMsg = `HTTP error ${response.status}`;
-                     try {
-                         const errorData = await response.json();
-                         if (errorData && errorData.error) {
-                             errorMsg = `Error: ${errorData.error}`;
-                         }
-                     } catch (parseError) {
-                         console.error("Could not parse error response:", parseError);
-                         // Fallback to status text if JSON parsing fails
-                         errorMsg = `HTTP error ${response.status}: ${response.statusText}`;
-                     }
-                    addMessage(errorMsg, 'error');
-                } else {
-                    const data = await response.json();
-                    if (data.error) {
-                         addMessage(`Error: ${data.error}`, 'error');
-                    } else if (data.response) {
-                        // Check if response has thinking content
-                        if (data.has_thinking && data.thinking) {
-                            addMessage(data.response, 'bot', true, data.thinking);
-                        } else {
-                            addMessage(data.response, 'bot');
-                        }
-                    } else {
-                         addMessage("Received an empty response from the bot.", 'error');
-                    }
-                }
-
-            } catch (error) {
-                chatContainer.removeChild(typingIndicator); // Ensure typing indicator is removed on network error
-                console.error('Fetch Error:', error);
-                addMessage(`Network or fetch error: ${error.message}`, 'error');
-            } finally {
-                 sendButton.disabled = false; // Re-enable button
-                 userInput.focus(); // Keep focus on input
-            }
-        }
-
-        sendButton.addEventListener('click', sendMessage);
-
-        userInput.addEventListener('keypress', (event) => {
-            // Send message on Enter key press
-            if (event.key === 'Enter') {
-                event.preventDefault(); // Prevent default form submission/newline
-                sendMessage();
-            }
-        });
-
-         // Initial focus on the input field
-        userInput.focus();
-
-    </script>
+    
+    <!-- Custom JavaScript -->
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
 </body>
 </html>
