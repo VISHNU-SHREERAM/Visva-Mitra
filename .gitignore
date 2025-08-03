@@ -176,4 +176,7 @@ cython_debug/
 mlruns/
 mlartifacts/
 
+# Static files
+# static/
+# Ignore all images in the static/images directory
 static/images/*
