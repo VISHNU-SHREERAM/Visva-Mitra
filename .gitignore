@@ -176,4 +176,4 @@ cython_debug/
 mlruns/
 mlartifacts/
 
-client/static/images/
+static/images/
