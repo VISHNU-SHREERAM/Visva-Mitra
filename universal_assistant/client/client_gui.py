@@ -30,7 +30,7 @@ STRINGS_URL = "http://localhost:8001/sse"
 ARITHMETIC_URL = "http://localhost:8002/sse"
 WEATHER_URL = "http://localhost:8003/sse"
 INFO_URL = "http://localhost:8004/sse"
-
+COMPUTER_CONTROL_URL = "http://localhost:8005/sse"
 
 app = Flask(__name__, 
             static_folder='static',  # Define the static folder explicitly
@@ -97,6 +97,10 @@ async def run_agent_task(prompt: str, model_name: str) -> dict:
                             "mcp/brave-search",
                         ],
                         "transport": "stdio",
+                    },
+                    "computer_control": {
+                        "url": COMPUTER_CONTROL_URL,
+                        "transport": "sse",
                     },
                     # "filesystem": {
                     #     "command": "docker",

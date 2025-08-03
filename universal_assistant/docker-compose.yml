@@ -7,7 +7,8 @@ services:
       - "7777:7777"
     restart: always
     volumes:
-      - whisper_models:/app/models  # Cache Whisper models between restarts
+      - whisper_models:/root/.cache/whisper  # Cache Whisper models in default location
+      - tts_models:/root/.cache/torch/hub  # Cache NVIDIA TTS models
     environment:
       - PYTHONUNBUFFERED=1
     healthcheck:
@@ -58,3 +59,5 @@ services:
 
 volumes:
   whisper_models:  # Named volume for persisting Whisper models
+  tts_models:  # Named volume for persisting NVIDIA TTS models
+

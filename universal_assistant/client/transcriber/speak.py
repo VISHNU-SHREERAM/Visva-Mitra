@@ -2,6 +2,7 @@
 
 import asyncio
 import logging
+import os
 from io import BytesIO
 
 import numpy as np
@@ -10,6 +11,9 @@ from scipy.io.wavfile import write
 
 # Configure logging
 logger = logging.getLogger(__name__)
+
+# Set PyTorch Hub cache directory to ensure models are cached
+torch.hub.set_dir("/root/.cache/torch/hub")
 
 # Global model variables
 tacotron2 = None
@@ -36,7 +40,7 @@ def initialize_tts_models() -> bool:
         
         # Load WaveGlow
         waveglow = torch.hub.load(
-            "NVIDIA/DeepLearningExamples:torchhub", 
+            "NVIDIA/DeepLearningExamples:torchhub",
             "nvidia_waveglow", 
             model_math="fp16" if device == "cuda" else "fp32"
         )

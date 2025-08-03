@@ -467,3 +467,28 @@ body {
         max-width: 92%;
     }
 }
+.message.bot img {
+    max-width: 100%;
+    max-height: 400px; /* Limit height to 400px */
+    height: auto;
+    width: auto;
+    object-fit: contain;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    margin: 8px 0;
+    cursor: pointer; /* Indicates it's clickable */
+    transition: transform 0.2s ease;
+}
+
+.message.bot img:hover {
+    transform: scale(1.02);
+}
+
+/* For very large screenshots, you might want even smaller */
+.message.bot img[alt*="Screenshot"] {
+    max-height: 300px;
+}
+
+.message.bot img[alt*="Camera"] {
+    max-height: 250px;
+}

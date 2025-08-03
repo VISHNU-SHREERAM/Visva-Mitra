@@ -444,3 +444,41 @@ document.addEventListener('DOMContentLoaded', function() {
     // Log a message to confirm script is running
     console.log('Chat interface initialized with audio recording and TTS functionality');
 });
+// Add click handler for images to show full size
+document.addEventListener('click', function(e) {
+    if (e.target.tagName === 'IMG' && e.target.closest('.message.bot')) {
+        // Create modal overlay
+        const modal = document.createElement('div');
+        modal.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            cursor: pointer;
+        `;
+        
+        // Create full-size image
+        const fullImg = document.createElement('img');
+        fullImg.src = e.target.src;
+        fullImg.style.cssText = `
+            max-width: 90%;
+            max-height: 90%;
+            object-fit: contain;
+            border-radius: 8px;
+        `;
+        
+        modal.appendChild(fullImg);
+        document.body.appendChild(modal);
+        
+        // Close modal on click
+        modal.addEventListener('click', function() {
+            document.body.removeChild(modal);
+        });
+    }
+});
