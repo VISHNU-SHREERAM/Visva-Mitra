@@ -1,7 +1,7 @@
 # Viśva Mitra
 ## One Assistant. Infinite Possibilities.
 
-## to setup do the following
+## to setup do the following (On Linux-based machines )
 (Pre-req - need to have Ollama installed, just and uv)
 for setting up - "just setup"
 for runnning -   "just run"
