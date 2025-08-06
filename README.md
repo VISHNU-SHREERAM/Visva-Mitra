@@ -56,7 +56,7 @@ List of tools available:
 - Brave Search Server 
      - brave_web_search
      - brave_local_search
-- File Server
+- File Server (*currently removed from codebase. Will be updated soon)
      - read_file
      - read_multiple_files
      - write_file
@@ -68,7 +68,7 @@ List of tools available:
      - search_files
      - get_file_info
      - list_allowed_directories
-- Memory Server
+- Memory Server (*currently removed from codebase. Will be updated soon )
      - create_entities
      - create_relations
      - add_observations
